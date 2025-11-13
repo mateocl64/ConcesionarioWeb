@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # Base de datos SQL Server para ConcesionarioWeb
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: concesionario-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong@Password123
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    networks:
+      - concesionario-network
+
+  # Aplicación ASP.NET Core
+  concesionarioweb:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: concesionario-app
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__Concesionario=Server=sqlserver;Database=concesionario;User Id=sa;Password=YourStrong@Password123;TrustServerCertificate=True;MultipleActiveResultSets=true
+    ports:
+      - "5000:5000"
+    depends_on:
+      - sqlserver
+    networks:
+      - concesionario-network
+
+networks:
+  concesionario-network:
+    driver: bridge
+
+volumes:
+  sqlserver-data:
